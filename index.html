@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#5c6cff" />
     <title>班宠星球｜班级宠物积分系统</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <style>
       :root {
         --bg: #f6f8ff;
@@ -163,6 +166,45 @@
       .warning {
         color: var(--danger);
       }
+      .auth-grid {
+        display: grid;
+        gap: 10px;
+      }
+      .auth-grid input {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        font: inherit;
+        background: #fff;
+      }
+      .vip-tag {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: #fff6d9;
+        color: #a66f00;
+        border: 1px solid #ffe3a3;
+      }
+      .vip-tag.normal {
+        background: #edf2ff;
+        color: #4f5cb2;
+        border-color: #dce5ff;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
       @media (min-width: 860px) {
         .app {
           grid-template-columns: 1.1fr 1fr;
@@ -195,6 +237,28 @@
           <h3>📈 数据化决策支撑</h3>
           <p>实时积分、成长趋势、荣誉排行可视化，激励更精准。</p>
         </article>
+      </section>
+
+      <section class="card" style="margin-bottom: 16px;">
+        <h3>用户中心（注册 / 登录 / VIP）</h3>
+        <div class="auth-grid">
+          <div class="row">
+            <label class="sr-only" for="authUsername">用户名</label>
+            <input id="authUsername" type="text" placeholder="用户名（至少2位）" autocomplete="username" />
+            <label class="sr-only" for="authPassword">密码</label>
+            <input id="authPassword" type="password" placeholder="密码（至少6位）" autocomplete="current-password" />
+          </div>
+          <div class="row">
+            <button id="registerBtn" class="primary" type="button">注册</button>
+            <button id="loginBtn" type="button">登录</button>
+            <button id="logoutBtn" type="button">退出登录</button>
+            <button id="vipBtn" class="success" type="button">开通VIP</button>
+            <button id="installAppBtn" type="button" class="hidden">安装到设备</button>
+          </div>
+          <p id="authStatus" class="tip" aria-live="polite">请先注册或登录后再使用班级管理功能。</p>
+          <p class="tip">当前用户：<strong id="currentUserText">未登录</strong> <span id="vipTag" class="vip-tag normal">普通会员</span></p>
+          <p class="tip">VIP特权：可解锁额外萌宠盲盒池（12种）。</p>
+        </div>
       </section>
 
       <section class="app">
@@ -247,15 +311,27 @@
 
     <script>
       const PET_POOL = ['星云猫', '奶糖兔', '闪电狐', '布丁熊', '泡泡鲸', '小火龙', '云朵鸟', '薄荷鹿'];
+      const VIP_PET_POOL = ['银河狮', '月光犬', '极光鹿', '星尘狐'];
+      const USERS_KEY = 'bcxq_users';
+      const SESSION_KEY = 'bcxq_current_user';
 
       const studentInput = document.getElementById('studentInput');
       const studentTable = document.getElementById('studentTable');
       const statusNode = document.getElementById('status');
       const petProfiles = document.getElementById('petProfiles');
       const csvFile = document.getElementById('csvFile');
+      const authUsername = document.getElementById('authUsername');
+      const authPassword = document.getElementById('authPassword');
+      const authStatusNode = document.getElementById('authStatus');
+      const currentUserText = document.getElementById('currentUserText');
+      const vipTag = document.getElementById('vipTag');
+      const installAppBtn = document.getElementById('installAppBtn');
 
       const state = {
-        students: []
+        students: [],
+        users: [],
+        currentUser: '',
+        installPromptEvent: null
       };
 
       function parseStudents(raw) {
@@ -292,13 +368,71 @@
         render();
       }
 
+      function getCurrentUser() {
+        return state.users.find((user) => user.username === state.currentUser) || null;
+      }
+
+      function isVipUser() {
+        const user = getCurrentUser();
+        return Boolean(user && user.isVip);
+      }
+
+      function setAuthStatus(text, isWarning = false) {
+        authStatusNode.textContent = text;
+        authStatusNode.className = isWarning ? 'tip warning' : 'tip';
+      }
+
+      function persistAuth() {
+        localStorage.setItem(USERS_KEY, JSON.stringify(state.users));
+        localStorage.setItem(SESSION_KEY, state.currentUser);
+      }
+
+      function loadAuth() {
+        try {
+          const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+          state.users = Array.isArray(users) ? users : [];
+        } catch (error) {
+          state.users = [];
+          setAuthStatus('检测到本地账号数据损坏，已自动重置。', true);
+        }
+        state.currentUser = localStorage.getItem(SESSION_KEY) || '';
+      }
+
+      function renderAuth() {
+        const user = getCurrentUser();
+        if (!user) {
+          currentUserText.textContent = '未登录';
+          vipTag.textContent = '普通会员';
+          vipTag.className = 'vip-tag normal';
+          return;
+        }
+        currentUserText.textContent = user.username;
+        vipTag.textContent = user.isVip ? 'VIP会员' : '普通会员';
+        vipTag.className = user.isVip ? 'vip-tag' : 'vip-tag normal';
+      }
+
+      function requireLogin() {
+        if (getCurrentUser()) {
+          return true;
+        }
+        setAuthStatus('请先登录后再进行班级管理操作。', true);
+        return false;
+      }
+
+      function getPetPool() {
+        return isVipUser() ? PET_POOL.concat(VIP_PET_POOL) : PET_POOL;
+      }
+
       function randomizePets() {
+        if (!requireLogin()) {
+          return;
+        }
         if (!state.students.length) {
           setStatus('请先导入学生，再进行宠物分配。', true);
           return;
         }
 
-        const names = [...PET_POOL];
+        const names = [...getPetPool()];
         for (let i = names.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));
           [names[i], names[j]] = [names[j], names[i]];
@@ -323,6 +457,10 @@
       }
 
       function onManualPetChange(index, value) {
+        if (!requireLogin()) {
+          render();
+          return;
+        }
         state.students[index].pet = value;
         setStatus(`已调整 ${state.students[index].name} 的宠物为「${value || '未分配'}」。`);
         renderProfiles();
@@ -341,7 +479,7 @@
 
           const petOptions = ['<option value="">未分配</option>']
             .concat(
-              PET_POOL.map(
+              getPetPool().map(
                 (pet) =>
                   `<option value="${escapeHtml(pet)}" ${student.pet === pet ? 'selected' : ''}>${escapeHtml(pet)}</option>`
               )
@@ -392,6 +530,9 @@
       }
 
       document.getElementById('importText').addEventListener('click', () => {
+        if (!requireLogin()) {
+          return;
+        }
         const parsed = parseStudents(studentInput.value);
         if (!parsed.length) {
           setStatus('未识别到有效学生信息，请检查输入格式。', true);
@@ -402,6 +543,9 @@
       });
 
       document.getElementById('importCsv').addEventListener('click', async () => {
+        if (!requireLogin()) {
+          return;
+        }
         const file = csvFile.files?.[0];
         if (!file) {
           setStatus('请先选择CSV或TXT文件。', true);
@@ -430,6 +574,101 @@
         setStatus('已清空学生数据。');
         render();
       });
+
+      document.getElementById('registerBtn').addEventListener('click', () => {
+        const username = authUsername.value.trim();
+        const password = authPassword.value;
+        if (username.length < 2 || password.length < 6) {
+          setAuthStatus('注册失败：用户名至少2位，密码至少6位。', true);
+          return;
+        }
+        if (state.users.some((user) => user.username === username)) {
+          setAuthStatus('注册失败：用户名已存在。', true);
+          return;
+        }
+        // 仅用于静态演示：密码会保存在本地存储，生产环境必须使用后端安全认证与加密存储。
+        state.users.push({ username, password, isVip: false });
+        state.currentUser = username;
+        persistAuth();
+        renderAuth();
+        setAuthStatus(`注册成功，已自动登录用户 ${username}。`);
+      });
+
+      document.getElementById('loginBtn').addEventListener('click', () => {
+        const username = authUsername.value.trim();
+        const password = authPassword.value;
+        const user = state.users.find((item) => item.username === username && item.password === password);
+        if (!user) {
+          setAuthStatus('登录失败：用户名或密码错误。', true);
+          return;
+        }
+        state.currentUser = user.username;
+        persistAuth();
+        renderAuth();
+        setAuthStatus(`登录成功，欢迎回来：${user.username}。`);
+      });
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        if (!getCurrentUser()) {
+          setAuthStatus('当前没有已登录用户。', true);
+          return;
+        }
+        state.currentUser = '';
+        persistAuth();
+        renderAuth();
+        setAuthStatus('已退出登录。');
+      });
+
+      document.getElementById('vipBtn').addEventListener('click', () => {
+        const user = getCurrentUser();
+        if (!user) {
+          setAuthStatus('请先登录再开通VIP。', true);
+          return;
+        }
+        if (user.isVip) {
+          setAuthStatus('您已经是VIP会员，无需重复开通。');
+          return;
+        }
+        user.isVip = true;
+        persistAuth();
+        renderAuth();
+        render();
+        setAuthStatus(`恭喜 ${user.username} 成功开通VIP，已解锁额外萌宠池。`);
+      });
+
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        state.installPromptEvent = event;
+        installAppBtn.classList.remove('hidden');
+      });
+
+      installAppBtn.addEventListener('click', async () => {
+        if (!state.installPromptEvent) {
+          setAuthStatus('当前环境暂不支持安装提示，请使用浏览器菜单安装。', true);
+          return;
+        }
+        state.installPromptEvent.prompt();
+        const choice = await state.installPromptEvent.userChoice;
+        state.installPromptEvent = null;
+        installAppBtn.classList.add('hidden');
+        if (choice && choice.outcome === 'accepted') {
+          setAuthStatus('已接受安装请求，请按系统提示完成安装。');
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        installAppBtn.classList.add('hidden');
+        setAuthStatus('应用已安装到设备，可在桌面或主屏幕启动。');
+      });
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js');
+        });
+      }
+
+      loadAuth();
+      renderAuth();
     </script>
   </body>
 </html>
