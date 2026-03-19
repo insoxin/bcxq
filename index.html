@@ -276,7 +276,8 @@
           .replaceAll('<', '&lt;')
           .replaceAll('>', '&gt;')
           .replaceAll('"', '&quot;')
-          .replaceAll("'", '&#39;');
+          .replaceAll("'", '&#39;')
+          .replaceAll('`', '&#96;');
       }
 
       function mergeStudents(newStudents) {
@@ -339,7 +340,12 @@
           const row = document.createElement('tr');
 
           const petOptions = ['<option value="">未分配</option>']
-            .concat(PET_POOL.map((pet) => `<option value="${pet}" ${student.pet === pet ? 'selected' : ''}>${pet}</option>`))
+            .concat(
+              PET_POOL.map(
+                (pet) =>
+                  `<option value="${escapeHtml(pet)}" ${student.pet === pet ? 'selected' : ''}>${escapeHtml(pet)}</option>`
+              )
+            )
             .join('');
 
           row.innerHTML = `
@@ -347,7 +353,7 @@
             <td>${escapeHtml(student.studentId || '-')}</td>
             <td>${escapeHtml(student.pet || '未分配')}</td>
             <td>
-              <select data-index="${index}" aria-label="调整 ${escapeHtml(student.name)} 的宠物">
+              <select data-index="${Number(index)}" aria-label="调整 ${escapeHtml(student.name)} 的宠物">
                 ${petOptions}
               </select>
             </td>
@@ -396,19 +402,23 @@
       });
 
       document.getElementById('importCsv').addEventListener('click', async () => {
-        const file = csvFile.files && csvFile.files[0];
+        const file = csvFile.files?.[0];
         if (!file) {
           setStatus('请先选择CSV或TXT文件。', true);
           return;
         }
-        const text = await file.text();
-        const parsed = parseStudents(text);
-        if (!parsed.length) {
-          setStatus('文件中未识别到有效学生信息。', true);
-          return;
+        try {
+          const text = await file.text();
+          const parsed = parseStudents(text);
+          if (!parsed.length) {
+            setStatus('文件中未识别到有效学生信息。', true);
+            return;
+          }
+          mergeStudents(parsed);
+          setStatus(`已从文件导入 ${parsed.length} 条学生记录。`);
+        } catch (error) {
+          setStatus('读取文件失败，请检查文件格式后重试。', true);
         }
-        mergeStudents(parsed);
-        setStatus(`已从文件导入 ${parsed.length} 条学生记录。`);
       });
 
       document.getElementById('assignPets').addEventListener('click', randomizePets);
@@ -416,9 +426,7 @@
       document.getElementById('clearAll').addEventListener('click', () => {
         state.students = [];
         studentInput.value = '';
-        if (csvFile.value) {
-          csvFile.value = '';
-        }
+        csvFile.value = '';
         setStatus('已清空学生数据。');
         render();
       });
