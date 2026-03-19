@@ -17,18 +17,28 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
   }
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(event.request)
-        .then((response) => {
-          const cloned = response.clone();
-          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned)));
-          return response;
-        })
-        .catch(() => caches.match('./index.html'));
-    })
+  let cacheUpdatePromise = Promise.resolve();
+  const responsePromise = caches.match(event.request).then((cached) => {
+    if (cached) {
+      return cached;
+    }
+    return fetch(event.request)
+      .then((response) => {
+        const cloned = response.clone();
+        cacheUpdatePromise = caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+        return response;
+      })
+      .catch((error) => {
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+        throw error;
+      });
+  });
+  event.respondWith(responsePromise);
+  event.waitUntil(
+    responsePromise
+      .then(() => cacheUpdatePromise)
+      .catch(() => undefined)
   );
 });
