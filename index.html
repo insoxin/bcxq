@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>班宠星球｜班级宠物积分系统</title>
+    <style>
+      :root {
+        --bg: #f6f8ff;
+        --card: #ffffff;
+        --text: #263238;
+        --sub: #5f6b7a;
+        --primary: #5c6cff;
+        --accent: #35c9a8;
+        --danger: #ff6b6b;
+        --border: #e7ebf5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: radial-gradient(circle at top right, #eef1ff 0, var(--bg) 42%);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      .container {
+        width: min(1100px, 92vw);
+        margin: 0 auto;
+      }
+      .hero {
+        padding: 40px 0 26px;
+      }
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.5rem);
+      }
+      .hero p {
+        color: var(--sub);
+        margin: 8px 0 0;
+      }
+      .badge {
+        display: inline-block;
+        margin-top: 12px;
+        background: #e9f9f4;
+        color: #148d73;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+      }
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+      .highlights {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        margin: 16px 0 28px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 8px 20px rgba(42, 51, 88, 0.05);
+      }
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+      .card p,
+      .card li {
+        margin: 0;
+        color: var(--sub);
+        font-size: 0.95rem;
+      }
+      .app {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 1fr;
+        padding-bottom: 36px;
+      }
+      .controls {
+        display: grid;
+        gap: 10px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        resize: vertical;
+        font: inherit;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      input[type='file'] {
+        max-width: 100%;
+      }
+      button,
+      select {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 8px 12px;
+        font: inherit;
+        background: #fff;
+      }
+      button.primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+      button.success {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .tip {
+        color: var(--sub);
+        font-size: 0.9rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: middle;
+      }
+      th {
+        color: var(--sub);
+        font-weight: 600;
+      }
+      .empty {
+        color: var(--sub);
+        text-align: center;
+        padding: 18px;
+      }
+      .pet-grid {
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      }
+      .pet {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+      }
+      .pet strong {
+        font-size: 1.03rem;
+      }
+      .pet small {
+        color: var(--sub);
+      }
+      .warning {
+        color: var(--danger);
+      }
+      @media (min-width: 860px) {
+        .app {
+          grid-template-columns: 1.1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="hero">
+        <h1>《班宠星球》班级宠物积分系统</h1>
+        <p>一款用萌宠陪伴激活班级活力的创新管理工具</p>
+        <span class="badge">设备支持：电脑、手机、平板，全平台通用</span>
+      </section>
+
+      <section class="grid highlights">
+        <article class="card">
+          <h3>✨ 专属萌宠陪伴</h3>
+          <p>每位学生拥有独一无二的虚拟宠物，宠物成长与学生行为深度绑定。</p>
+        </article>
+        <article class="card">
+          <h3>🎮 游戏化激励闭环</h3>
+          <p>积分、成长、兑换形成正向循环，让学生主动进步。</p>
+        </article>
+        <article class="card">
+          <h3>⚡ 轻量化管理工具</h3>
+          <p>班主任可一键导入学生、分配宠物、设置规则，管理更高效。</p>
+        </article>
+        <article class="card">
+          <h3>📈 数据化决策支撑</h3>
+          <p>实时积分、成长趋势、荣誉排行可视化，激励更精准。</p>
+        </article>
+      </section>
+
+      <section class="app">
+        <article class="card controls">
+          <h3>「班级宠物分配」：一键开启萌宠陪伴</h3>
+          <label for="studentInput">1) 批量导入学生（每行一个姓名，支持“姓名,学号”）</label>
+          <textarea id="studentInput" placeholder="例如：&#10;张三,2026001&#10;李四,2026002"></textarea>
+
+          <div class="row">
+            <button id="importText" class="primary" type="button">从文本导入</button>
+            <input id="csvFile" type="file" accept=".csv,.txt" />
+            <button id="importCsv" type="button">导入CSV/TXT</button>
+          </div>
+          <p class="tip">CSV建议格式：姓名,学号。系统会自动去重并忽略空行。</p>
+
+          <div class="row">
+            <button id="assignPets" class="success" type="button">随机盲盒分配宠物</button>
+            <button id="clearAll" type="button">清空名单</button>
+          </div>
+          <p id="status" class="tip" aria-live="polite">请先导入学生信息。</p>
+        </article>
+
+        <article class="card">
+          <h3>宠物专属档案</h3>
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>学生</th>
+                  <th>学号</th>
+                  <th>宠物</th>
+                  <th>手动调整</th>
+                </tr>
+              </thead>
+              <tbody id="studentTable">
+                <tr><td colspan="4" class="empty">暂无学生数据</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="card" style="margin-bottom: 36px;">
+        <h3>当前宠物档案卡</h3>
+        <div id="petProfiles" class="grid pet-grid">
+          <p class="tip">完成分配后将显示每位学生的专属成长链路。</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const PET_POOL = ['星云猫', '奶糖兔', '闪电狐', '布丁熊', '泡泡鲸', '小火龙', '云朵鸟', '薄荷鹿'];
+
+      const studentInput = document.getElementById('studentInput');
+      const studentTable = document.getElementById('studentTable');
+      const statusNode = document.getElementById('status');
+      const petProfiles = document.getElementById('petProfiles');
+      const csvFile = document.getElementById('csvFile');
+
+      const state = {
+        students: []
+      };
+
+      function parseStudents(raw) {
+        return raw
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const [name = '', studentId = ''] = line.split(',').map((part) => part.trim());
+            return { name, studentId, pet: '' };
+          })
+          .filter((item) => item.name);
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function mergeStudents(newStudents) {
+        const existing = new Map(state.students.map((s) => [`${s.name}#${s.studentId}`, s]));
+        newStudents.forEach((s) => {
+          const key = `${s.name}#${s.studentId}`;
+          if (!existing.has(key)) {
+            existing.set(key, s);
+          }
+        });
+        state.students = [...existing.values()];
+        render();
+      }
+
+      function randomizePets() {
+        if (!state.students.length) {
+          setStatus('请先导入学生，再进行宠物分配。', true);
+          return;
+        }
+
+        const names = [...PET_POOL];
+        for (let i = names.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [names[i], names[j]] = [names[j], names[i]];
+        }
+
+        state.students = state.students.map((student, idx) => {
+          const base = names[idx % names.length];
+          const round = Math.floor(idx / names.length);
+          return {
+            ...student,
+            pet: round > 0 ? `${base}${round + 1}号` : base
+          };
+        });
+
+        setStatus(`已完成 ${state.students.length} 位学生的随机盲盒分配。`);
+        render();
+      }
+
+      function setStatus(text, isWarning = false) {
+        statusNode.textContent = text;
+        statusNode.className = isWarning ? 'tip warning' : 'tip';
+      }
+
+      function onManualPetChange(index, value) {
+        state.students[index].pet = value;
+        setStatus(`已调整 ${state.students[index].name} 的宠物为「${value || '未分配'}」。`);
+        renderProfiles();
+      }
+
+      function render() {
+        if (!state.students.length) {
+          studentTable.innerHTML = '<tr><td colspan="4" class="empty">暂无学生数据</td></tr>';
+          petProfiles.innerHTML = '<p class="tip">完成分配后将显示每位学生的专属成长链路。</p>';
+          return;
+        }
+
+        studentTable.innerHTML = '';
+        state.students.forEach((student, index) => {
+          const row = document.createElement('tr');
+
+          const petOptions = ['<option value="">未分配</option>']
+            .concat(PET_POOL.map((pet) => `<option value="${pet}" ${student.pet === pet ? 'selected' : ''}>${pet}</option>`))
+            .join('');
+
+          row.innerHTML = `
+            <td>${escapeHtml(student.name)}</td>
+            <td>${escapeHtml(student.studentId || '-')}</td>
+            <td>${escapeHtml(student.pet || '未分配')}</td>
+            <td>
+              <select data-index="${index}" aria-label="调整 ${escapeHtml(student.name)} 的宠物">
+                ${petOptions}
+              </select>
+            </td>
+          `;
+
+          studentTable.appendChild(row);
+        });
+
+        studentTable.querySelectorAll('select').forEach((select) => {
+          select.addEventListener('change', (event) => {
+            const idx = Number(event.target.getAttribute('data-index'));
+            onManualPetChange(idx, event.target.value);
+          });
+        });
+
+        renderProfiles();
+      }
+
+      function renderProfiles() {
+        const assigned = state.students.filter((s) => s.pet);
+        if (!assigned.length) {
+          petProfiles.innerHTML = '<p class="tip">当前尚未完成宠物分配。</p>';
+          return;
+        }
+
+        petProfiles.innerHTML = assigned
+          .map(
+            (student) => `
+              <article class="pet">
+                <strong>${escapeHtml(student.pet)}</strong><br />
+                <small>绑定学生：${escapeHtml(student.name)}（${escapeHtml(student.studentId || '无学号')}）</small>
+              </article>
+            `
+          )
+          .join('');
+      }
+
+      document.getElementById('importText').addEventListener('click', () => {
+        const parsed = parseStudents(studentInput.value);
+        if (!parsed.length) {
+          setStatus('未识别到有效学生信息，请检查输入格式。', true);
+          return;
+        }
+        mergeStudents(parsed);
+        setStatus(`已导入 ${parsed.length} 条学生记录。`);
+      });
+
+      document.getElementById('importCsv').addEventListener('click', async () => {
+        const file = csvFile.files && csvFile.files[0];
+        if (!file) {
+          setStatus('请先选择CSV或TXT文件。', true);
+          return;
+        }
+        const text = await file.text();
+        const parsed = parseStudents(text);
+        if (!parsed.length) {
+          setStatus('文件中未识别到有效学生信息。', true);
+          return;
+        }
+        mergeStudents(parsed);
+        setStatus(`已从文件导入 ${parsed.length} 条学生记录。`);
+      });
+
+      document.getElementById('assignPets').addEventListener('click', randomizePets);
+
+      document.getElementById('clearAll').addEventListener('click', () => {
+        state.students = [];
+        studentInput.value = '';
+        if (csvFile.value) {
+          csvFile.value = '';
+        }
+        setStatus('已清空学生数据。');
+        render();
+      });
+    </script>
+  </body>
+</html>
